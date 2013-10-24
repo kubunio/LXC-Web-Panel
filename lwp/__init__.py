@@ -438,7 +438,7 @@ def check_version(url=None, proxy=None):
         opener = urllib2.build_opener(proxy_support)
         urllib2.install_opener(opener)
     except CalledProcessError:
-	proxy=None
+        proxy=None
         pass
 
     if not url:
