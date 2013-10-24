@@ -1,5 +1,6 @@
 import subprocess
 import os
+import re
 
 # LXC Python Library
 # for compatibility with LXC 0.8 and 0.9
@@ -119,21 +120,31 @@ def listx():
     stopped = []
     frozen = []
     running = []
-
-    output = _run('lxc-ls --fancy --fancy-format name,state', output=True)
-
-    if output:
-        output = output.splitlines()[2:]
-
-        for line in output:
-            container, state = line.split()
-
+    
+    if re.search(" 0\.8\.", version()): # LXC 0.8.x
+        for container in ls():
+            state = info(container)['state']
             if state == 'RUNNING':
                 running.append(container)
             elif state == 'FROZEN':
                 frozen.append(container)
             elif state == 'STOPPED':
                 stopped.append(container)
+
+    if re.search(" 0\.9\.", version()): # LXC 0.9.x
+        output = _run('lxc-ls --fancy --fancy-format name,state', output=True)
+
+        if output:
+            output = output.splitlines()[2:]
+
+            for line in output:
+                container, state = line.split()
+                if state == 'RUNNING':
+                    running.append(container)
+                elif state == 'FROZEN':
+                    frozen.append(container)
+                elif state == 'STOPPED':
+                    stopped.append(container)
 
     return {'RUNNING': running,
             'FROZEN': frozen,
@@ -211,4 +222,11 @@ def checkconfig():
     '''
     out = _run('lxc-checkconfig', output=True)
     if out: return out.replace('[1;32m', '').replace('[1;33m', '').replace('[0;39m', '').replace('[1;32m', '').replace('\x1b', '').replace(': ', ':').split('\n')
+    return out
+
+def version():
+    '''
+    Displays lxc version
+    '''
+    out = _run('lxc-version', output=True)
     return out
