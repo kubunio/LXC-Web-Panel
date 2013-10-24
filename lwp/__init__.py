@@ -426,17 +426,29 @@ def version_normalize(version):
         p -= 3
     return s
 
-def check_version(url=None):
+def check_version(url=None, proxy=None):
     '''
     returns latest LWP version (dict with current and latest)
     '''
     f = open('version')
     current = f.read()
     f.close()
+    try:
+        proxy_support = urllib2.ProxyHandler({'http': proxy, 'https': proxy})
+        opener = urllib2.build_opener(proxy_support)
+        urllib2.install_opener(opener)
+    except CalledProcessError:
+	proxy=None
+        pass
 
     if not url:
         url = 'http://lxc-webpanel.github.com/version'
-    latest = urllib2.urlopen(url).read()
+    try:
+        latest = urllib2.urlopen(url).read()
+    except urllib2.URLError, urllib2.HTTPError:
+        latest = current
+        pass
+    
     return {
         'current': current,
         'latest': latest,

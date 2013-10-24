@@ -21,6 +21,10 @@ DATABASE = config.get('database', 'file')
 ADDRESS = config.get('global', 'address')
 PORT = int(config.get('global', 'port'))
 
+try: proxy = config.get('version', 'proxy')
+except ConfigParser.NoOptionError:
+    proxy = None
+    pass
 
 # Flask app
 app = Flask(__name__)
@@ -76,7 +80,7 @@ def about():
     if 'logged_in' in session:
         return render_template('about.html',
                                containers=lxc.ls(),
-                               version=lwp.check_version(url=config.get('version', 'url')))
+                               version=lwp.check_version(url=config.get('version', 'url'), proxy=proxy))
     return render_template('login.html')
 
 
@@ -850,7 +854,7 @@ def _get_template_options(name=None):
 @app.route('/_check_version')
 def check_version():
     if 'logged_in' in session:
-        return jsonify(lwp.check_version(url=config.get('version', 'url')))
+        return jsonify(lwp.check_version(url=config.get('version', 'url'), proxy=proxy))
 
 
 def hash_passwd(passwd):
